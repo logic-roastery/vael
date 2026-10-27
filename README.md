@@ -109,7 +109,3 @@ Install the skill folder, not the repository's root `AGENTS.md`.
 | Old or duplicate instructions appear | Check for other Vael copies in user-level and project-level skill directories, including an older installation under `~/.codex/skills/`. Keep the intended copy. |
 | Profile changes do not appear | Run the build. If the installation is a copy, refresh it after rebuilding. |
 | The build rejects a preference | Check schema version, field names, duplicate IDs, classification, and confidence against the existing profile. |
-
-Vael works without Ponytail or RTK. You can select Ponytail alongside it and use RTK through your environment's configuration; Vael does not install or activate either tool.
-
-The repository contains reviewed preferences, not private prompt history. Keep private research outside it and review new content before publishing. Build tests validate the configuration and generated files; they do not establish how reliably a live agent follows the instructions.
