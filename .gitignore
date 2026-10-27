@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+work/
+
+# Local-only material must stay outside the public repository.
+.code-review-graph/
+private/
+history/
+analysis/
+.env
+.env.*
+*.jsonl
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
