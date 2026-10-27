@@ -1,77 +1,115 @@
-# Vael — Your Mind. Every Agent.
+# Vael
 
-A portable personal engineering profile and a self-contained `$vael` skill for coding agents. Vael defines how to discuss, review, assess architecture, and implement changes while respecting scope, project patterns, and explicit authorization.
+A Codex skill for discussing, reviewing, designing, and implementing software with clear scope and deliberate changes.
 
-This repository distributes reviewed preferences, not the private conversations used to develop them. It is a configuration prototype; the proposed Vael application and history-import CLI are not implemented.
+Vael asks the agent to follow project conventions, compare working implementations, preserve behavior during migrations, and verify relevant changes. Commits and pushes stay with you unless you explicitly authorize them.
 
-## Task modes
+## Install
 
-| Mode | Purpose | File edits |
+### From GitHub
+
+Ask Codex:
+
+```text
+Use $skill-installer to install the vael skill from
+https://github.com/logic-roastery/vael/tree/main/skills/vael
+into ~/.agents/skills.
+```
+
+Only `skills/vael/` is installed. You do not need Python or the rest of this repository to use the skill.
+
+After installation, type `$vael` in Codex. If it does not appear, restart Codex and check `/skills`.
+
+### From a local checkout
+
+For developing or customizing Vael, link the skill to your checkout. Run these commands from the repository root:
+
+```sh
+mkdir -p "$HOME/.agents/skills"
+if [ -e "$HOME/.agents/skills/vael" ] || [ -L "$HOME/.agents/skills/vael" ]; then
+  printf '%s\n' 'Vael is already installed. Review that installation before replacing it.'
+else
+  ln -s "$PWD/skills/vael" "$HOME/.agents/skills/vael"
+fi
+```
+
+Codex supports symlinked skill folders. Changes to the generated skill in this checkout become available through the link. Keep the checkout in place while using it.
+
+For use in just one project, copy `skills/vael/` into that project's `.agents/skills/` instead. Choose one installation method to avoid duplicate copies. See the [Codex skill documentation](https://learn.chatgpt.com/docs/build-skills) for discovery and installation locations.
+
+## Use Vael
+
+| Mode | Use it for | File edits |
 |---|---|---|
-| Discuss | Explore ideas, explain behavior, compare options | None |
-| Review | Prioritized code findings supported by evidence | None |
+| Discuss | Explain behavior, explore an idea, compare options | None |
+| Review | Find actionable problems in code or a proposed change | None |
 | Architecture | Assess boundaries, dependencies, data flow, and trade-offs | None |
-| Update | Implement and verify an authorized change | Within scope |
+| Update | Implement an authorized change and verify the result | Within the requested scope |
 
-Explicit instructions select the mode. Clear ordinary requests can select it implicitly. A follow-up such as “implement option B” enters Update while retaining the agreed scope. Debugging fits within these modes. These are agent instructions, not executable CLI commands or technical access controls.
+```text
+$vael discuss: should this logic live in the service or a shared component?
+$vael review: inspect this branch for bugs and unnecessary changes. Do not edit.
+$vael architecture: assess this polling design and compare it with our existing pattern.
+$vael update: implement option B and run the relevant tests. Do not commit.
+```
 
-## Included preferences
+You can switch modes naturally. After a discussion, “implement option B” authorizes implementation while retaining the agreed scope. Explicit restrictions such as “don't update” still apply. Debugging can use any of the four modes.
 
-- Follow applicable project conventions and compare relevant working implementations.
-- Keep changes simple and focused; use shared components when concrete reuse justifies them.
-- Preserve business behavior and contracts during migrations, including meaningful test expectations.
-- Explain reasoning when requested and verify relevant changed behavior.
-- Trace necessary callers, tests, configuration, and dependencies before declaring completion.
-- Assess operational cost and environment differences when relevant.
-- Leave commits and pushes to the user unless explicitly authorized. A commit-message request is not commit authorization.
+A request for a commit message does not authorize a commit. If you want the agent to commit or push, say so explicitly.
 
-The profile includes confidence and context labels as author assessments. The public repository cannot independently reproduce historical support for those labels. Adapt the profile to your own preferences; it is not a universal engineering standard.
+## Update or remove an installation
 
-## Repository layout
+**Linked installation:** update your checkout using your normal Git workflow. If you change the profile or renderer, rebuild the skill as described below.
 
-- `profiles/default.json`: public profile, schema version 3; source of truth for preferences.
-- `scripts/build.py`: deterministic standard-library renderer.
-- `scripts/test_build.py`: profile validation and rendering checks.
-- `skills/vael/`: generated standalone skill and UI metadata.
-- `AGENTS.md`: instructions for developing Vael; do not install it as personal defaults.
+**Copied or installer-managed installation:** review the new version and back up any edits made directly to your installed copy. Remove that copy, then repeat the GitHub installation. The built-in installer stops when the destination already exists; it does not overwrite it in place.
 
-## Build and check
+To uninstall from the user-level location used in this guide:
 
-Use Python 3 with its standard library. No API keys, model calls, network services, or private evidence files are required.
+```sh
+rm -r "$HOME/.agents/skills/vael"
+```
+
+This removes the installed folder or symlink. It leaves a linked source checkout intact. For a project-only installation, remove that project's `.agents/skills/vael` instead.
+
+## Customize and build
+
+Maintainers need Python 3 with its standard library. No additional packages, API keys, or private conversation files are required.
+
+1. Edit `profiles/default.json` to change a preference, its contexts, or its exceptions. Set `enabled` to `false` to exclude it from the skill.
+2. Edit the template in `scripts/build.py` to change mode behavior or the generated UI metadata.
+3. Rebuild and run the checks from the repository root:
 
 ```sh
 python3 -B scripts/build.py
 python3 -B scripts/test_build.py
 ```
 
-Edit the profile or renderer rather than generated outputs. Schema version 3 generates only the skill and UI metadata. It removes the obsolete personal-default export flag. The renderer rejects earlier schemas and unexpected metadata fields. Weak or one-time preferences require review before activation.
+The build writes `skills/vael/SKILL.md` and `skills/vael/agents/openai.yaml`. Direct edits to those files will be replaced on the next build. A linked installation sees the rebuilt files; a copied installation needs to be refreshed.
 
-## Local Codex installation
+The profile uses schema version 3. Preserve its existing fields and allowed classifications. Weak or one-time preferences require review and reclassification before they can be enabled. Confidence labels are author assessments, not publicly reproducible measurements.
 
-Review the generated skill, then copy it manually from the repository root only if the destination does not exist:
-
-```sh
-mkdir -p "$HOME/.agents/skills"
-test ! -e "$HOME/.agents/skills/vael" && cp -R skills/vael "$HOME/.agents/skills/"
-```
-
-For repository-only use, copy the folder into that repository's `.agents/skills/` after checking existing contents. Invoke explicitly with `$vael`, for example:
+## Project files
 
 ```text
-$vael review: inspect this change without editing.
-$vael update: implement the agreed option.
+profiles/default.json            Editable preferences
+scripts/build.py                Skill and metadata generator
+scripts/test_build.py           Profile validation and build checks
+skills/vael/SKILL.md              Generated skill instructions
+skills/vael/agents/openai.yaml    Generated Codex UI metadata
+AGENTS.md                       Instructions for maintaining this repository
 ```
 
-See the [official skill documentation](https://learn.chatgpt.com/docs/build-skills) for discovery and invocation. Building does not install or activate anything.
+Install the skill folder, not the repository's root `AGENTS.md`.
 
-## Optional tools
+## Troubleshooting
 
-Vael works independently. Ponytail can complement its simplicity guidance when selected. RTK can support command execution where installed and chosen by environment instructions. Neither is bundled or automatically activated. Combined live behavior has not been validated. Generator tests check configuration and rendering; live agent behavior has not been tested.
+| Problem | What to check |
+|---|---|
+| `$vael` is missing | Confirm the installed folder contains `SKILL.md`. Check `/skills`, then restart Codex if needed. |
+| Old or duplicate instructions appear | Check for other Vael copies in user-level and project-level skill directories, including an older installation under `~/.codex/skills/`. Keep the intended copy. |
+| Profile changes do not appear | Run the build. If the installation is a copy, refresh it after rebuilding. |
+| The build rejects a preference | Check schema version, field names, duplicate IDs, classification, and confidence against the existing profile. |
 
-## Publication boundaries
+Vael works without Ponytail or RTK. You can select Ponytail alongside it and use RTK through your environment's configuration; Vael does not install or activate either tool.
 
-Private prompt excerpts, source inventories, session identifiers, timestamps, source hashes, activity counts, local machine paths, and historical evaluation transcripts are excluded. Local backups remain outside this repository.
-
-Keep private research outside the repository and review new content for secrets and confidential details before publishing. Ignore rules reduce accidental additions but do not remove sensitive files already tracked by Git.
-
-The repository contains intentionally public engineering preferences. Sanitization does not remove their meaning or turn them into anonymous aggregate research. No automatic history collection, telemetry, uploading, committing, pushing, or publishing is included.
+The repository contains reviewed preferences, not private prompt history. Keep private research outside it and review new content before publishing. Build tests validate the configuration and generated files; they do not establish how reliably a live agent follows the instructions.
